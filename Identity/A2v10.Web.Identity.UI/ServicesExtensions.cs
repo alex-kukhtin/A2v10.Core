@@ -16,7 +16,7 @@ public static class ServicesExtensions
 		builder.AddApplicationPart(assembly);
 		builder.Services.AddAntiforgery(opts =>
 		{
-			opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+			opts.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 		});
 		builder.Services.AddScoped<IAppUserAdmin, AppUserAdmin>();
 		builder.Services.AddScoped<IAppUserProfile, AppUserProfile>();

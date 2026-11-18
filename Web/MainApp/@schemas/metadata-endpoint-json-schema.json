@@ -30,7 +30,7 @@
         },
         "model": {
             "type": "string",
-            "description": "Stem of the generated names. Defaults to the endpoint folder name in PascalCase."
+            "description": "Stem of the generated names. Defaults to the endpoint folder name in PascalCase; in document/metadata.json, to 'Document'."
         },
         "presentation": {
             "type": "string",
@@ -107,7 +107,7 @@
                 "type": { "$ref": "#/definitions/columnType" },
                 "target": {
                     "type": "string",
-                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'). At most one 'company' column per table, none in a collection."
+                    "description": "For a reference: path of the endpoint it points at, e.g. '/catalog/item'. Required, and checked against the kind, for 'enum' ('/enum/...'), 'state' ('/state/...'), 'account' ('/accplan/...'), 'company' ('/catalog/company') and 'basedOn' ('/document/...'); not written for 'user', whose target is the platform's logins. At most one 'company' column per table, none in a collection."
                 },
                 "length": {
                     "type": "integer",
@@ -366,7 +366,7 @@
 
         "postLedger": {
             "type": "object",
-            "description": "Posting into a ledger: two mirrored legs. CorrAcc, InOut, Date and the provenance are filled by the platform, never mapped. A leg with no 'row' block is collapsed to the header.",
+            "description": "Posting into a ledger: two mirrored legs, or one where the other side does not exist (an off-balance account, a document of the opening balance) - the other leg is then {}. CorrAcc, InOut, Date and the provenance are filled by the platform, never mapped. A leg with no 'row' block is collapsed to the header.",
             "additionalProperties": false,
             "required": [ "ledger", "sum", "dt", "ct" ],
             "properties": {
@@ -379,6 +379,10 @@
                     "type": "string",
                     "description": "The sum field: of the iterated row under 'each', else of the header. One for both legs."
                 },
+                "storno": {
+                    "type": "boolean",
+                    "description": "Red storno: Sum and the legs' Amount, Qty, Money are written negated; InOut, Acc and CorrAcc stay. Of the posting, both legs."
+                },
                 "dt": { "$ref": "#/definitions/postLeg" },
                 "ct": { "$ref": "#/definitions/postLeg" }
             }
@@ -386,7 +390,7 @@
 
         "postLeg": {
             "type": "object",
-            "description": "One leg: ledger column -> its source, the source being the block key. Keys are 'Acc' or the author's columns of the ledger, never the provenance; a column in one block only; exactly one 'Acc' across the blocks.",
+            "description": "One leg: ledger column -> its source, the source being the block key. Keys are 'Acc' or the author's columns of the ledger, never the provenance; a column in one block only; exactly one 'Acc' across the blocks. {} - no blocks: this side of the posting does not exist; both legs empty is refused at load.",
             "additionalProperties": false,
             "properties": {
                 "const": {
@@ -738,11 +742,10 @@
                     "type": "string",
                     "description": "Shown by domain_info when the folder name is not enough."
                 },
-                "searchBy": {
+                "measures": {
                     "type": "object",
-                    "description": "Catalog only. Field -> how catalog_find matches it: 'exact' (=) or 'contains' (substring). Written, it replaces the derived set whole (the presentation as 'contains', a 'unique' string field as 'exact').",
-                    "minProperties": 1,
-                    "additionalProperties": { "type": "string", "enum": [ "exact", "contains" ] }
+                    "description": "A report: measure -> what it is, when the name and the type do not say (Sum: the cost or the revenue).",
+                    "additionalProperties": { "type": "string" }
                 }
             }
         },

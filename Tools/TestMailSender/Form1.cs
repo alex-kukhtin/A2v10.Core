@@ -1,9 +1,9 @@
 
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
-using System.Windows.Forms;
 
 namespace TestMailSender;
 
@@ -33,11 +33,13 @@ public partial class Form1 : Form
             Text = "Message body test"
         };
 
-        var client = new SmtpClient();
-        client.ServerCertificateValidationCallback = (sender, cert, ch, err) => true;
+        var client = new SmtpClient
+        {
+            ServerCertificateValidationCallback = (sender, cert, ch, err) => true
+        };
         await client.ConnectAsync(host, port, SecureSocketOptions.Auto);
         await client.AuthenticateAsync(userName, password);
-        await client.SendAsync(mm);
+        await client.SendAsync(new SendRequest(mm));
         await client.DisconnectAsync(true);
 
         MessageBox.Show("Sent successfully");

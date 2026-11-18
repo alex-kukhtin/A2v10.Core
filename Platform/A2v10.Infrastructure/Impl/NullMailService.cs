@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace A2v10.Infrastructure;
 
-public class NullMailService : IMailService
+public class NullMailService : IAppMailService
 {
 	public Task SendAsync(IMailMessage message)
 	{

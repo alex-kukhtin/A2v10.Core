@@ -10,7 +10,7 @@ public static class ServicesExtensions
 {
 	public static IServiceCollection UseMailClient(this IServiceCollection services)
 	{
-		services.AddSingleton<IMailService, MailClient>();
+		services.AddSingleton<IAppMailService, MailClient>();
 		return services;
 	}
 }

@@ -16,7 +16,7 @@ namespace A2v10.Identity.UI;
 internal class EmailSender(IServiceProvider serviceProvider)
 {
 	private readonly UserManager<AppUser<Int64>> _userManager = serviceProvider.GetRequiredService<UserManager<AppUser<Int64>>>();
-	private readonly IMailService _mailService = serviceProvider.GetRequiredService<IMailService>();
+	private readonly IAppMailService _mailService = serviceProvider.GetRequiredService<IAppMailService>();
 	private readonly ILocalizer _localizer = serviceProvider.GetRequiredService<ILocalizer>();
 	private readonly IHttpContextAccessor _httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
 

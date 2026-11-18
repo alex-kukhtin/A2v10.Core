@@ -14,10 +14,11 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 
 using A2v10.Infrastructure;
+using MailKit;
 
 namespace A2v10.MailClient;
 
-public class MailClient : IMailService
+public class MailClient : IAppMailService
 {
 	private readonly MailSettings _mailSettings = new();
 	private readonly ILogger<MailClient> _logger;
@@ -91,7 +92,8 @@ public class MailClient : IMailService
 			client.ServerCertificateValidationCallback = (sender, cert, ch, err) => true;
 		await client.ConnectAsync(_mailSettings.Host, _mailSettings.Port, FromOptions(_mailSettings.Secure));
 		await client.AuthenticateAsync(_mailSettings.UserName, _mailSettings.Password);
-		await client.SendAsync(mm);
+		var sr = new SendRequest(mm);
+		await client.SendAsync(sr);
 		await client.DisconnectAsync(true);
         if (_logger.IsEnabled(LogLevel.Information))
             _logger.LogInformation("Mail sent. It took {ms} ms", wt.ElapsedMilliseconds);

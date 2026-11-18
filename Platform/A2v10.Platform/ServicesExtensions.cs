@@ -66,7 +66,7 @@ public static class ServicesExtensions
 		services.AddSingleton<IXamlPartProvider, XamlPartProvider>();
 
 		// default implementations
-		services.TryAddSingleton<IMailService, NullMailService>();
+		services.TryAddSingleton<IAppMailService, NullMailService>();
 		services.TryAddScoped<IUserBannerProvider, NullUserBannerProvider>();
 		services.TryAddScoped<ILicenseManager, EmptyLicenseManager>();
 		services.TryAddSingleton<ISqlQueryTextProvider, NullSqlQueryTextProvider>();
@@ -135,7 +135,7 @@ public static class ServicesExtensions
 		app.UseCookiePolicy(new CookiePolicyOptions()
 		{
 			HttpOnly = HttpOnlyPolicy.Always,
-			Secure = CookieSecurePolicy.Always,
+			Secure = CookieSecurePolicy.SameAsRequest,
 			MinimumSameSitePolicy = SameSiteMode.Lax /* Required for GOOGLE Auth*/
 		});
 

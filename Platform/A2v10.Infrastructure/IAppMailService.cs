@@ -1,4 +1,4 @@
-﻿// Copyright © 2023 Olekdsandr Kukhtin. All rights reserved.
+﻿// Copyright © 2023-2026 Olekdsandr Kukhtin. All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -38,7 +38,7 @@ public interface IMailMessage
 	void AddAttachment(Stream stream, String name, String mime);
 }
 
-public interface IMailService
+public interface IAppMailService
 {
 	Task SendAsync(IMailMessage message);
 	Task SendAsync(String to, String subject, String body);

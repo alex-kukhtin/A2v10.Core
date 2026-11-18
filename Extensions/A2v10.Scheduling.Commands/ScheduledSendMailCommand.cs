@@ -13,7 +13,7 @@ using A2v10.Scheduling.Infrastructure;
 
 namespace A2v10.Scheduling.Commands;
 
-public class ScheduledSendMailCommand(ILogger<ScheduledSendMailCommand> _logger, IMailService _mailService) : IScheduledCommand
+public class ScheduledSendMailCommand(ILogger<ScheduledSendMailCommand> _logger, IAppMailService _mailService) : IScheduledCommand
 {
     public Task ExecuteAsync(String? Data)
     {

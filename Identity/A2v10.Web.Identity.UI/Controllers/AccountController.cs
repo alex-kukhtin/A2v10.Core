@@ -37,7 +37,7 @@ public class AccountController(
 	SignInManager<AppUser<Int64>> _signInManager, 
 	UserManager<AppUser<Int64>> _userManager,
     IAntiforgery _antiforgery, IDbContext _dbContext,
-    IApplicationTheme _appTheme, IMailService _mailService, ILocalizer _localizer,
+    IApplicationTheme _appTheme, IAppMailService _mailService, ILocalizer _localizer,
     IConfiguration _configuration, IAppTenantManager _appTenantManager, 
 	ILogger<AccountController> _logger, UrlEncoder _urlEncoder,
     IDataProtectionProvider protectionProvider,
