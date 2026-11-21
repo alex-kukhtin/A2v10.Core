@@ -21,7 +21,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="QRCoder" Version="1.8.1" />
+		<PackageReference Include="QRCoder" Version="1.9.0" />
 		<PackageReference Include="QuestPDF" Version="2026.9.2" />
 	</ItemGroup>
 
